@@ -26,6 +26,7 @@ import { ReservationForPresentationRepositoryImpl } from './infra/db/repositorie
 import { ReservationForPresentationService } from './services/reservation-for-presentation.service';
 import { ReservationForPresentationController } from './controllers/reservation-for-presentation.controller';
 import { ReservationForPresentation } from './infra/db/entitites/reservation-for-presentation.entity';
+import { InfraModule } from 'src/infra/infra.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReservationForPresentation } from './infra/db/entitites/reservation-for
     ]),
     DatabaseModule,
     UserModule,
+    InfraModule,
   ],
   providers: [
     ShowService,
