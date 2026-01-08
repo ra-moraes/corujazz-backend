@@ -8,11 +8,11 @@ const isDevEnvironment =
 
 const entitiesPath = isDevEnvironment
   ? __dirname + '/../**/**/*.entity{.ts,.js}'
-  : 'dist/**/*.entity.js';
+  : __dirname + '/../**/**/*.entity.js';
 
 const migrationsPath = isDevEnvironment
   ? __dirname + '/migrations/*.{js,ts}'
-  : 'dist/migrations/*.js';
+  : __dirname + '/migrations/*.js';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
