@@ -27,6 +27,13 @@ import { ReservationForPresentationService } from './services/reservation-for-pr
 import { ReservationForPresentationController } from './controllers/reservation-for-presentation.controller';
 import { ReservationForPresentation } from './infra/db/entitites/reservation-for-presentation.entity';
 import { InfraModule } from 'src/infra/infra.module';
+import { PRESENTATION_REPOSITORY } from './domain/interfaces/presentation.repository';
+import { PresentationRepositoryImpl } from './infra/db/repositories/presentation.repository-impl';
+import { PresentationService } from './services/presentation.service';
+import { PresentationController } from './controllers/presentation.controller';
+import { Presentation } from './infra/db/entitites/presentation.entity';
+import { CalendarController } from './controllers/calendar.controller';
+import { CalendarService } from './services/calendar.service';
 
 @Module({
   imports: [
@@ -37,6 +44,7 @@ import { InfraModule } from 'src/infra/infra.module';
       Calendar,
       Unavailability,
       ReservationForPresentation,
+      Presentation,
     ]),
     DatabaseModule,
     UserModule,
@@ -47,6 +55,8 @@ import { InfraModule } from 'src/infra/infra.module';
     EstablishmentService,
     UnavailabilityService,
     ReservationForPresentationService,
+    PresentationService,
+    CalendarService,
     {
       provide: SHOW_REPOSITORY,
       useClass: ShowRepositoryImpl,
@@ -67,12 +77,18 @@ import { InfraModule } from 'src/infra/infra.module';
       provide: RESERVATION_FOR_PRESENTATION_REPOSITORY,
       useClass: ReservationForPresentationRepositoryImpl,
     },
+    {
+      provide: PRESENTATION_REPOSITORY,
+      useClass: PresentationRepositoryImpl,
+    },
   ],
   controllers: [
     ShowController,
     EstablishmentController,
     UnavailabilityController,
     ReservationForPresentationController,
+    PresentationController,
+    CalendarController,
   ],
   exports: [TypeOrmModule],
 })

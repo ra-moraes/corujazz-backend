@@ -1,20 +1,41 @@
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import {
+  DomainCheckableState,
+  DomainStateError,
+} from '../interfaces/domain-checkable-state.interface';
 
-export abstract class Calendar {
+export abstract class Calendar implements DomainCheckableState {
   private readonly id: string;
+  private externalCalendarId?: string;
 
   constructor(
-    private readonly startDate: Date,
-    private readonly endDate: Date,
+    private startDate: Date,
+    private endDate: Date,
     id?: string,
   ) {
     this.id = id ?? randomUUID();
+  }
+
+  abstract checkState(): DomainStateError[];
+
+  updateCalendarRange(startDate: Date, endDate: Date): void {
+    this.startDate = startDate;
+    this.endDate = endDate;
+  }
+
+  protected validateState() {
+    const errors = this.checkState();
 
     if (this.startDate >= this.endDate) {
-      throw new BadRequestException(
-        'A data de início deve ser anterior à data de término.',
-      );
+      errors.push({
+        field: 'dateRange',
+        message: 'A data de início deve ser anterior à data de término.',
+      });
+    }
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
     }
   }
 
@@ -28,5 +49,13 @@ export abstract class Calendar {
 
   getEndDate(): Date {
     return this.endDate;
+  }
+
+  setExternalCalendarId(externalCalendarId?: string): void {
+    this.externalCalendarId = externalCalendarId;
+  }
+
+  getExternalCalendarId(): string | undefined {
+    return this.externalCalendarId;
   }
 }

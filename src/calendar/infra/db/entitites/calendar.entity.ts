@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { Unavailability } from './unavailability.entity';
 import { ReservationForPresentation } from './reservation-for-presentation.entity';
+import { Presentation } from './presentation.entity';
 
 export enum CalendarType {
   UNAVAILABILITY = 'unavailability',
@@ -25,6 +26,9 @@ export class Calendar {
   })
   type: CalendarType;
 
+  @Column({ nullable: true })
+  externalCalendarId?: string;
+
   @OneToMany(() => Unavailability, (unavailability) => unavailability.calendar)
   unavailabilities!: Unavailability[];
 
@@ -33,4 +37,7 @@ export class Calendar {
     (reservationsForPresentation) => reservationsForPresentation.calendar,
   )
   reservationsForPresentation!: ReservationForPresentation[];
+
+  @OneToMany(() => Presentation, (presentation) => presentation.calendar)
+  presentations!: Presentation[];
 }

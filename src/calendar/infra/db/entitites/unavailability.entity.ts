@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Calendar } from './calendar.entity';
+import { User } from 'src/user/infra/db/entities/user.entity';
 
 @Entity('unavailability_calendars')
 export class Unavailability {
@@ -8,6 +9,10 @@ export class Unavailability {
 
   @Column({ type: 'uuid' })
   userId!: string;
+
+  @ManyToOne(() => User, { eager: false })
+  @JoinColumn({ name: 'userId' })
+  user?: User;
 
   @ManyToOne(() => Calendar, {
     cascade: true,

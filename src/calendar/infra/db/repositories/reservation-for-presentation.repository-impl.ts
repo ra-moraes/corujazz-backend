@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReservationForPresentation as ReservationForPresentationOrm } from '../entitites/reservation-for-presentation.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ReservationForPresentationRepository } from 'src/calendar/domain/interfaces/reservation-for-presentation.repository';
 import { ReservationForPresentation } from 'src/calendar/domain/entitites/reservation-for-presentation.domain-entity';
 import { ReservationForPresentationMapper } from '../mappers/reservation-for-presentation.mapper';
@@ -15,17 +15,31 @@ export class ReservationForPresentationRepositoryImpl
     private readonly repo: Repository<ReservationForPresentationOrm>,
   ) {}
 
-  async save(reservation: ReservationForPresentation): Promise<void> {
+  async save(
+    reservation: ReservationForPresentation,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = manager
+      ? manager.getRepository(ReservationForPresentationOrm)
+      : this.repo;
+
     const ormEntity = ReservationForPresentationMapper.toOrmEntity(reservation);
-    await this.repo.save(ormEntity);
+    await repository.save(ormEntity);
   }
 
-  async delete(reservation: ReservationForPresentation): Promise<void> {
+  async delete(
+    reservation: ReservationForPresentation,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = manager
+      ? manager.getRepository(ReservationForPresentationOrm)
+      : this.repo;
+
     if (!reservation.getIdReservationForPresentation()) {
       throw new NotFoundException('Reserva não existe (id inválido)');
     }
 
-    await this.repo.delete({
+    await repository.delete({
       id: reservation.getIdReservationForPresentation(),
     });
   }
@@ -49,7 +63,8 @@ export class ReservationForPresentationRepositoryImpl
     throw new Error('Method not implemented.');
   }
 
-  findByUserId(userId: number): Promise<ReservationForPresentation[]> {
+  // findByUserId(userId: number): Promise<ReservationForPresentation[]> {
+  findByUserId(): Promise<ReservationForPresentation[]> {
     throw new Error('Method not implemented.');
   }
 }

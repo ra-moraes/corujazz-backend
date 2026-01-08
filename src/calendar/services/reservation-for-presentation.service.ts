@@ -28,6 +28,8 @@ import {
   type EstablishmentRepository,
 } from '../domain/interfaces/establishment.repository';
 import { Establishment } from '../domain/entitites/establishment.domain-entity';
+import { DateTimeRange } from '../domain/value-objects/date-time-range.vo';
+import { type Calendar, CALENDAR } from 'src/infra/calendar/calendar.interface';
 
 @Injectable()
 export class ReservationForPresentationService {
@@ -42,6 +44,8 @@ export class ReservationForPresentationService {
     private readonly showRepo: ShowRepository,
     @Inject(ESTABLISHMENT_REPOSITORY)
     private readonly establishmentRepo: EstablishmentRepository,
+    @Inject(CALENDAR)
+    private readonly externalCalendarService: Calendar,
   ) {}
 
   async create(
@@ -73,8 +77,7 @@ export class ReservationForPresentationService {
 
     const reservation = new ReservationForPresentation(
       UserId.create(userId),
-      startDate,
-      endDate,
+      DateTimeRange.create(startDate, endDate),
       reservationId,
       calendarId,
       observations,
@@ -82,6 +85,17 @@ export class ReservationForPresentationService {
       establishment,
       value,
     );
+
+    const externalCalendarEvent =
+      await this.externalCalendarService.createEvent(
+        `Reserva de data: ${reservation.getEstablishment()?.getName() || user.getName()}`,
+        `<b>Show:<b/> ${reservation.getShow()?.getName() || 'N/A'}
+<b>Observações:<b/> ${reservation.getObservations() || 'N/A'}
+<b>Negociador:</b> ${user.getName()}`,
+        reservation.getStartDate().toISOString(),
+        reservation.getEndDate().toISOString(),
+      );
+    reservation.setExternalCalendarId(externalCalendarEvent.id);
 
     await this.reservationRepo.save(reservation);
 
@@ -131,7 +145,23 @@ export class ReservationForPresentationService {
       throw new NotFoundException('Reserva não encontrada');
     }
 
+    const externalCalendarId = reservation.getExternalCalendarId();
+    if (externalCalendarId) {
+      await this.externalCalendarService.removeEvent(externalCalendarId);
+    }
+
     await this.calendarRepo.delete(reservation);
     await this.reservationRepo.delete(reservation);
+  }
+
+  async getReservationForPresentation(
+    reservationId: string,
+  ): Promise<ReservationForPresentation> {
+    const reservation = await this.reservationRepo.find(reservationId);
+    if (!reservation) {
+      throw new NotFoundException('Reserva não encontrada');
+    }
+
+    return reservation;
   }
 }

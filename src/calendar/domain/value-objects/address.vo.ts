@@ -28,4 +28,8 @@ export class Address {
   public getDistance(): number {
     return this.distance;
   }
+
+  public toString(): string {
+    return `${this.street}, ${this.city} - ${this.distance} km`;
+  }
 }

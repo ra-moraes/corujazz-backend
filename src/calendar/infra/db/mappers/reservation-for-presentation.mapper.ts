@@ -9,6 +9,7 @@ import { ReservationForPresentation as ReservationForPresentationOrm } from '../
 import { ReservationForPresentation } from 'src/calendar/domain/entitites/reservation-for-presentation.domain-entity';
 import { ShowMapper } from './show.mapper';
 import { EstablishmentMapper } from './establishment.mapper';
+import { DateTimeRange } from 'src/calendar/domain/value-objects/date-time-range.vo';
 
 export class ReservationForPresentationMapper {
   static toDomain(
@@ -16,10 +17,9 @@ export class ReservationForPresentationMapper {
   ): ReservationForPresentation {
     const calendar = orm.calendar;
 
-    const unavailability = new ReservationForPresentation(
+    const reservation = new ReservationForPresentation(
       UserId.create(orm.userId),
-      calendar.dateStart,
-      calendar.dateEnd,
+      DateTimeRange.create(calendar.dateStart, calendar.dateEnd),
       orm.id,
       calendar.id,
       orm.observations,
@@ -29,8 +29,9 @@ export class ReservationForPresentationMapper {
         : undefined,
       orm.value,
     );
+    reservation.setExternalCalendarId(calendar.externalCalendarId);
 
-    return unavailability;
+    return reservation;
   }
 
   static toOrmEntity(
@@ -45,10 +46,13 @@ export class ReservationForPresentationMapper {
 
     const calendar = new CalendarOrm();
     const calendarId = domain.getCalendarId();
-    if (calendarId) {
-      orm.calendarId = calendarId;
-      calendar.id = calendarId;
-    }
+    calendar.id = calendarId;
+    calendar.dateStart = domain.getStartDate();
+    calendar.dateEnd = domain.getEndDate();
+    calendar.type = CalendarType.PRESENTATION_DATE_RESERVATION;
+    calendar.externalCalendarId = domain.getExternalCalendarId();
+    orm.calendar = calendar;
+    orm.calendarId = calendarId;
 
     const show = domain.getShow();
     if (show) {
@@ -59,11 +63,6 @@ export class ReservationForPresentationMapper {
     if (establishment) {
       orm.establishmentId = establishment.getId();
     }
-
-    calendar.dateStart = domain.getStartDate();
-    calendar.dateEnd = domain.getEndDate();
-    calendar.type = CalendarType.PRESENTATION_DATE_RESERVATION;
-    orm.calendar = calendar;
 
     orm.observations = domain.getObservations();
     orm.userId = domain.getUserId().getId();

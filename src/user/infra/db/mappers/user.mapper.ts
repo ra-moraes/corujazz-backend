@@ -23,6 +23,7 @@ export class UserMapper {
     orm.email = domain.getEmail();
     orm.password = domain.getPasswordHash();
     orm.role = domain.getRole();
+    orm.name = domain.getName();
 
     return orm;
   }

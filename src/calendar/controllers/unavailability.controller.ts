@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Inject,
   Param,
   Post,
@@ -19,6 +20,9 @@ import { UserRole } from 'src/user/domain/user-role.enum';
 import { UnavailabilityCreateRequestDto } from '../dto/unavailability-create-request.dto';
 import { CurrentUserId } from 'src/auth/decorators/current-user-id.decorator';
 import { UnavailabilityResponseDto } from '../dto/unavailability-response.dto';
+import { Unavailability } from '../domain/entitites/unavailability.domain-entity';
+import { UnavailabilityGetResponseDto } from '../dto/unavailability-get-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('unavailabilities')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,7 +34,7 @@ export class UnavailabilityController {
   ) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.BANDA)
+  @Roles(UserRole.ADMIN, UserRole.BANDA, UserRole.EQUIPE)
   async create(
     @Body() dto: UnavailabilityCreateRequestDto,
     @CurrentUserId() userId: string,
@@ -51,8 +55,31 @@ export class UnavailabilityController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.BANDA)
-  async delete(@Param('id') unavailabilityId: string): Promise<void> {
-    await this.unavailabilityService.delete(unavailabilityId);
+  @Roles(UserRole.ADMIN, UserRole.BANDA, UserRole.EQUIPE)
+  async delete(
+    @Param('id') unavailabilityId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    await this.unavailabilityService.delete(unavailabilityId, userId);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.BANDA, UserRole.EQUIPE)
+  async getUnavailability(
+    @Param('id') unavailabilityId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<UnavailabilityGetResponseDto> {
+    const unavailability = await this.unavailabilityService.getUnavailability(
+      unavailabilityId,
+      userId,
+    );
+
+    return plainToInstance<UnavailabilityGetResponseDto, Unavailability>(
+      UnavailabilityGetResponseDto,
+      unavailability,
+      {
+        excludeExtraneousValues: true,
+      },
+    );
   }
 }

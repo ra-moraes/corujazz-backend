@@ -23,6 +23,7 @@ export class GoogleCalendarService implements Calendar {
 
   async createEvent(
     summary: string,
+    description: string,
     startDateTime: string,
     endDateTime: string,
   ): Promise<CreatedEvent> {
@@ -30,11 +31,19 @@ export class GoogleCalendarService implements Calendar {
       calendarId: process.env.GOOGLE_CALENDAR_CALENDAR_ID || '',
       requestBody: {
         summary,
+        description,
         start: { dateTime: startDateTime },
         end: { dateTime: endDateTime },
       },
     });
 
     return { id: event.data.id! };
+  }
+
+  async removeEvent(eventId: string): Promise<void> {
+    await this.calendarApi.events.delete({
+      calendarId: process.env.GOOGLE_CALENDAR_CALENDAR_ID || '',
+      eventId,
+    });
   }
 }

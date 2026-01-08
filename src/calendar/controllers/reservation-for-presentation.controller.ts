@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   UseGuards,
@@ -14,6 +15,13 @@ import { CurrentUserId } from 'src/auth/decorators/current-user-id.decorator';
 import { ReservationForPresentationService } from '../services/reservation-for-presentation.service';
 import { ReservationForPresentationCreateRequestDto } from '../dto/reservation-for-presentation-create-request.dto';
 import { ReservationForPresentationResponseDto } from '../dto/reservation-for-presentation-response.dto';
+import { CurrentUserRole } from 'src/auth/decorators/current-user-role.decorator';
+import { ReservationForPresentationGetResponseEquipeDto } from '../dto/reservation-for-presentation-get-response-equipe.dto';
+import { ReservationForPresentation } from '../domain/entitites/reservation-for-presentation.domain-entity';
+import { ReservationForPresentationGetResponseBandaDto } from '../dto/reservation-for-presentation-get-response-banda.dto';
+import { ReservationForPresentationGetResponseAdminDto } from '../dto/reservation-for-presentation-get-response-admin.dto';
+import { plainToInstance } from 'class-transformer';
+import { ReservationForPresentationGetResponseDto } from '../dto/reservation-for-presentation-get-response.dto';
 
 @Controller('reservations-for-presentation')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -53,5 +61,45 @@ export class ReservationForPresentationController {
   @Roles(UserRole.ADMIN, UserRole.BANDA)
   async delete(@Param('id') reservationId: string): Promise<void> {
     await this.reservationService.delete(reservationId);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.BANDA, UserRole.EQUIPE)
+  async getReservationForPresentation(
+    @Param('id') reservationId: string,
+    @CurrentUserRole() userRole: string,
+  ): Promise<ReservationForPresentationGetResponseDto> {
+    const reservation =
+      await this.reservationService.getReservationForPresentation(
+        reservationId,
+      );
+
+    const response = (() => {
+      switch (userRole as UserRole) {
+        case UserRole.EQUIPE:
+          return plainToInstance<
+            ReservationForPresentationGetResponseEquipeDto,
+            ReservationForPresentation
+          >(ReservationForPresentationGetResponseEquipeDto, reservation, {
+            excludeExtraneousValues: true,
+          });
+        case UserRole.BANDA:
+          return plainToInstance<
+            ReservationForPresentationGetResponseBandaDto,
+            ReservationForPresentation
+          >(ReservationForPresentationGetResponseBandaDto, reservation, {
+            excludeExtraneousValues: true,
+          });
+        case UserRole.ADMIN:
+          return plainToInstance<
+            ReservationForPresentationGetResponseAdminDto,
+            ReservationForPresentation
+          >(ReservationForPresentationGetResponseAdminDto, reservation, {
+            excludeExtraneousValues: true,
+          });
+      }
+    })();
+
+    return response;
   }
 }

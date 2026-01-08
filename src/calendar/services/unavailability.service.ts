@@ -13,6 +13,8 @@ import {
   CALENDAR_REPOSITORY,
   type CalendarRepository,
 } from '../domain/interfaces/calendar.repository';
+import { type Calendar, CALENDAR } from 'src/infra/calendar/calendar.interface';
+import { UnavailabilityWithUserName } from '../dto/unavailability-with-user,dto';
 
 export class UnavailabilityService {
   constructor(
@@ -22,6 +24,8 @@ export class UnavailabilityService {
     private readonly userRepo: UserRepository,
     @Inject(CALENDAR_REPOSITORY)
     private readonly calendarRepo: CalendarRepository,
+    @Inject(CALENDAR)
+    private readonly externalCalendarService: Calendar,
   ) {}
 
   async create(
@@ -50,19 +54,61 @@ export class UnavailabilityService {
       throw new ConflictException('O período selecionado não está disponível');
     }
 
+    const externalCalendarEvent =
+      await this.externalCalendarService.createEvent(
+        `Indisponibilidade: ${user.getName()}`,
+        `<b>Motivo:<b/> ${unavailability.getReason()}`,
+        unavailability.getStartDate().toISOString(),
+        unavailability.getEndDate().toISOString(),
+      );
+    unavailability.setExternalCalendarId(externalCalendarEvent.id);
+
     await this.unavailabilityRepo.save(unavailability);
 
     return unavailability;
   }
 
-  async delete(unavailabilityId: string): Promise<void> {
+  async delete(unavailabilityId: string, userId: string): Promise<void> {
     const unavailability = await this.unavailabilityRepo.find(unavailabilityId);
 
     if (!unavailability) {
       throw new NotFoundException('Indisponibilidade não encontrada');
     }
 
+    if (unavailability.getUserId().getId() !== userId) {
+      throw new ConflictException(
+        'Não é possível excluir esta indisponibilidade.',
+      );
+    }
+
+    const externalCalendarId = unavailability.getExternalCalendarId();
+    if (externalCalendarId) {
+      await this.externalCalendarService.removeEvent(externalCalendarId);
+    }
+
     await this.calendarRepo.delete(unavailability);
     await this.unavailabilityRepo.delete(unavailability);
+  }
+
+  async getUnavailability(
+    unavailabilityId: string,
+    userId: string,
+  ): Promise<UnavailabilityWithUserName> {
+    const unavailability = await this.unavailabilityRepo.find(unavailabilityId);
+
+    if (!unavailability) {
+      throw new NotFoundException('Indisponibilidade não encontrada');
+    }
+
+    const user = await this.userRepo.find(unavailability.getUserId().getId());
+
+    if (!user) {
+      throw new NotFoundException('Indisponibilidade não encontrada (usuário)');
+    }
+
+    return Object.assign(unavailability, {
+      userName: user.getName(),
+      canDelete: unavailability.getUserId().getId() === userId,
+    });
   }
 }

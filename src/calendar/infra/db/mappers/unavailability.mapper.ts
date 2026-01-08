@@ -18,6 +18,7 @@ export class UnavailabilityMapper {
       orm.id,
       calendar.id,
     );
+    unavailability.setExternalCalendarId(calendar.externalCalendarId);
 
     return unavailability;
   }
@@ -32,15 +33,13 @@ export class UnavailabilityMapper {
 
     const calendar = new CalendarOrm();
     const calendarId = domain.getCalendarId();
-    if (calendarId) {
-      orm.calendarId = calendarId;
-      calendar.id = calendarId;
-    }
-
+    calendar.id = calendarId;
     calendar.dateStart = domain.getStartDate();
     calendar.dateEnd = domain.getEndDate();
     calendar.type = CalendarType.UNAVAILABILITY;
+    calendar.externalCalendarId = domain.getExternalCalendarId();
     orm.calendar = calendar;
+    orm.calendarId = calendarId;
 
     orm.reason = domain.getReason();
     orm.userId = domain.getUserId().getId();

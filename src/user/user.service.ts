@@ -27,4 +27,8 @@ export class UserService {
 
     return user;
   }
+
+  async load(id: string): Promise<User | null> {
+    return this.userRepo.find(id);
+  }
 }

@@ -1,3 +1,4 @@
+import { DomainStateError } from '../interfaces/domain-checkable-state.interface';
 import { UserId } from '../value-objects/user-id.vo';
 import { Calendar } from './calendar.domain-entity';
 import { randomUUID } from 'crypto';
@@ -16,6 +17,12 @@ export class Unavailability extends Calendar {
     super(startDate, endDate, idCalendar);
 
     this.idUnavailability = idUnavailability ?? randomUUID();
+
+    this.validateState();
+  }
+
+  checkState(): DomainStateError[] {
+    return [];
   }
 
   getReason(): string {
