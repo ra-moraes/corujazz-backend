@@ -6,16 +6,23 @@ const validatedEnv = process.env;
 const isDevEnvironment =
   validatedEnv.NODE_ENV === 'test' || validatedEnv.NODE_ENV === 'development';
 
+const entitiesPath = isDevEnvironment
+  ? __dirname + '/../**/**/*.entity{.ts,.js}'
+  : 'dist/**/*.entity.js';
+
+const migrationsPath = isDevEnvironment
+  ? __dirname + '/migrations/*.{js,ts}'
+  : 'dist/migrations/*.js';
+
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   url: validatedEnv.DATABASE_URL,
   logging: isDevEnvironment,
-  ssl:
-    process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : validatedEnv.DB_SSL === 'true',
-  migrations: [__dirname + '/migrations/*.{js,ts}'],
-  entities: [__dirname + '/../**/**/*.entity{.ts,.js}'],
+  ssl: !isDevEnvironment
+    ? { rejectUnauthorized: false }
+    : validatedEnv.DB_SSL === 'true',
+  migrations: [migrationsPath],
+  entities: [entitiesPath],
   extra: {
     max: validatedEnv.DB_POOL_MAX,
     min: validatedEnv.DB_POOL_MIN,
