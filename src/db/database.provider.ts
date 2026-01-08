@@ -8,7 +8,7 @@ const isDevEnvironment =
 
 const entitiesPath = isDevEnvironment
   ? __dirname + '/../**/**/*.entity{.ts,.js}'
-  : __dirname + '/../**/**/*.entity.js';
+  : 'dist/**/**/*.entity.js';
 
 const migrationsPath = isDevEnvironment
   ? __dirname + '/migrations/*.{js,ts}'
