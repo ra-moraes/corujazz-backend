@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": "22.x"
+  },
   "name": "corujazz-backend",
   "version": "0.0.1",
   "description": "",

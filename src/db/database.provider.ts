@@ -8,9 +8,12 @@ const isDevEnvironment =
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
-  url: validatedEnv.DB_URL,
+  url: validatedEnv.DATABASE_URL,
   logging: isDevEnvironment,
-  ssl: validatedEnv.DB_SSL === 'true',
+  ssl:
+    process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : validatedEnv.DB_SSL === 'true',
   migrations: [__dirname + '/migrations/*.{js,ts}'],
   entities: [__dirname + '/../**/**/*.entity{.ts,.js}'],
   extra: {
